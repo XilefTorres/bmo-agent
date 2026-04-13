@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+.env
+
+# Modelos Pesados (No se suben a GitHub)
+model/
+piper/*.onnx
+piper/*.json
+
+# Logs y Temporales
+*.log
+.DS_Store
+
+# Librerías de sistema o compilados
+*.so
