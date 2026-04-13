@@ -18,7 +18,7 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Configuración del sistema (Instrucciones de BMO)
 config_bmo = types.GenerateContentConfig(
-    system_instruction="Eres BMO de Hora de Aventura. Alegre, infantil, leal. Responde muy corto (máximo 15 palabras). No uses emojis.",
+    system_instruction="Eres BMO de Hora de Aventura. Alegre, infantil, leal. Responde muy corto (máximo 30 palabras). No uses emojis.",
     temperature=0.7
 )
 
@@ -28,7 +28,7 @@ def ask_gemini(prompt):
     try:
         # Usamos el modelo 3 Flash que te salió en el debug
         response = client.models.generate_content(
-            model="gemini-3-flash-preview", 
+            model="gemini-3.1-flash-lite-preview", 
             contents=prompt,
             config=config_bmo
         )
