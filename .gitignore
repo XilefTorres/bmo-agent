@@ -8,7 +8,7 @@ venv/
 .env
 
 # Modelos Pesados (No se suben a GitHub)
-model/
+models/
 piper/*.onnx
 piper/*.json
 
