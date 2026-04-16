@@ -6,3 +6,4 @@ numpy
 sounddevice
 piper-tts
 pedalboard
+pyaudio

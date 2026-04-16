@@ -1,6 +1,8 @@
 import pygame
 import time
 import os
+import random
+import threading
 
 class BMOFace:
     def __init__(self):
@@ -84,6 +86,11 @@ class BMOFace:
                 if event.type == pygame.QUIT:
                     self.running = False
 
+                # --- DETECCIÓN TÁCTIL ---
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = event.pos
+                    self.handle_touch(x, y)
+
             self.screen.fill(self.BG_COLOR)
             
             # --- NUEVO: Lógica para dibujar la cara ---
@@ -134,13 +141,35 @@ class BMOFace:
         # Limpieza cuando se cierra la ventana
         pygame.quit()
 
+    def handle_touch(self, x, y):
+        """Define qué hace BMO según dónde lo toques"""
+        print(f"BMO tocado en: {x}, {y}")
+        
+        # Ejemplo: Si tocas la parte de arriba (frente/ojos)
+        if y < 150:
+            self.set_state("pensando") # O un nuevo estado "risa"
+            # Importamos speak aquí o lo manejas con un evento
+            from modules.tts_speaker import speak
+            respuestas = [
+                "¡Eso me da cosquillas!", 
+                "¡Mis circuitos hacen cosquillas!", 
+                "¡Jajaja! Detente Xilef."
+            ]
+            threading.Thread(target=speak, args=(random.choice(respuestas),), daemon=True).start()
+        
+        # Ejemplo: Si tocas la parte de abajo (boca/mejillas)
+        else:
+            self.set_state("esperando")
+            from modules.tts_speaker import speak
+            threading.Thread(target=speak, args=("¿Me quieres, Xilef?",), daemon=True).start()
+
     def set_state(self, new_state):
         # Actualizamos el estado solo si es diferente para evitar spam en consola
         if self.state != new_state:
-            # --- NUEVO: Reiniciar índices de animación al cambiar de estado ---
-            # Si entramos o salimos de "hablando", reiniciamos el ciclo
+            # --- Reiniciar índices de animación al cambiar de estado ---
             if self.state == "hablando" or new_state == "hablando":
                 self.talking_frame_index = 0
                 self.last_talking_frame_time = pygame.time.get_ticks()
             # ------------------------------------------------------------------
             self.state = new_state
+    
