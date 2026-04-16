@@ -1,0 +1,8 @@
+python-dotenv
+google-genai
+pygame-ce
+SpeechRecognition
+numpy
+sounddevice
+piper-tts
+pedalboard
