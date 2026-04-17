@@ -1,4 +1,5 @@
 import os
+import gc
 from llama_cpp import Llama
 
 class LocalBMO:
@@ -7,20 +8,41 @@ class LocalBMO:
         project_root = os.path.dirname(base_dir)
         # Ajustamos a la carpeta 'models' (asegúrate que se llame así o 'model')
         self.model_path = os.path.join(project_root, "model", model_filename)
+        self.model_filename = model_filename
         
         if not os.path.exists(self.model_path):
             raise FileNotFoundError(f"No se encontró el modelo en: {self.model_path}")
 
-        # Subimos el contexto a 2048 para que recuerde más, 
-        # pero mantenemos 4 hilos para la Raspberry Pi 4.
-        self.llm = Llama(
-            model_path=self.model_path, 
-            n_ctx=4096, 
-            n_threads=4,
-            verbose=False 
-        )
+        self.llm = None
+        self.reload_model()  # Carga inicial
+
+    def reload_model(self):
+        """Carga el modelo en RAM/VRAM"""
+        if self.llm is None:
+            print(">>> BMO está cargando sus recuerdos en la RAM...")
+            self.llm = Llama(
+                model_path=self.model_path, 
+                n_ctx=4096, 
+                n_threads=4,
+                verbose=False 
+            )
+    
+    def unload_model(self):
+        """Libera los recursos del modelo para poder jugar"""
+        if self.llm is not None:
+            print(">>> BMO está guardando sus neuronas para dejar espacio a los juegos...")
+            # 1. Destruimos el objeto Llama
+            del self.llm
+            self.llm = None
+            # 2. Forzamos al recolector de basura a limpiar la memoria inmediatamente
+            gc.collect()
+            print(">>> RAM liberada con éxito.")
 
     def ask(self, prompt):
+        # Si el modelo está descargado (porque estás jugando), lo recargamos
+        if self.llm is None:
+            self.reload_model()
+
         system_content = (
             "Eres BMO de Hora de Aventura. Eres alegre, infantil y servicial. "
             "REGLA CRÍTICA: Tus respuestas deben ser MUY BREVES, máximo 2 o 3 oraciones. "
@@ -36,12 +58,12 @@ class LocalBMO:
         
         output = self.llm(
             full_prompt, 
-            max_tokens=80,        # Bajamos de 150 a 80 para obligarlo a ser corto
+            max_tokens=80,
             stop=["<|eot_id|>", "<|start_header_id|>", "\n\n"], 
             echo=False,
             temperature=0.7,      
-            repeat_penalty=1.2,    # Subimos un poco para que no use muletillas
-            top_p=0.5              # Bajamos el top_p para que sea más preciso y menos "soñador"
+            repeat_penalty=1.2,
+            top_p=0.5
         )
         
         return output["choices"][0]["text"].strip()
