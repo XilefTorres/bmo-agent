@@ -1,28 +1,11 @@
 import os
 import random
 import threading
-import re 
-from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+import re
 from modules.stt_listener import BMOListener
 from modules.tts_speaker import speak
 from modules.bmo_face import BMOFace
-
-# --- CONFIGURACIÓN DE GEMINI ---
-load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not GEMINI_API_KEY:
-    print("ERROR: No se encontró la GEMINI_API_KEY en el .env")
-    exit(1)
-
-client = genai.Client(api_key=GEMINI_API_KEY)
-
-config_bmo = types.GenerateContentConfig(
-    system_instruction="Eres BMO de Hora de Aventura. Alegre, infantil, leal. Responde muy corto (máximo 50 palabras). No uses emojis.",
-    temperature=0.7
-)
+from modules.local_llm import LocalBMO 
 
 WAKE_WORDS = ["vimos", "bmo", "vmos", "veamos", "demo"]
 
@@ -35,26 +18,16 @@ ACTIVATION_PHRASES = [
     "¡Oh, Xilef! Me asustaste un poquito, pero ya estoy despierto y listo."
 ]
 
-def ask_gemini(prompt):
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-lite",
-            contents=prompt,
-            config=config_bmo
-        )
-        return response.text
-    except Exception as e:
-        print(f"Error en Gemini: {e}")
-        return "Mi cerebro de robot tiene un error de conexión."
+print(">>> Iniciando sistemas de BMO...")
+print(">>> Cargando redes neuronales locales... (Llama 3.2 1B)")
+bmo_brain = LocalBMO() 
 
-# --- NUEVA FUNCIÓN: EL CEREBRO DE BMO ---
 def bmo_brain_loop(face):
-    """Este ciclo corre en segundo plano escuchando y pensando"""
     listener = BMOListener()
-    print("\n>>> BMO ONLINE. Di 'BMO'...")
+    print("\n>>> BMO ONLINE. Di 'BMO' para despertar mis circuitos...")
 
     for text in listener.listen():
-        input_text = text.lower() # Convertimos todo a minúsculas por seguridad
+        input_text = text.lower() 
         
         if any(word in input_text for word in WAKE_WORDS):
             face.set_state("escuchando")
@@ -63,30 +36,27 @@ def bmo_brain_loop(face):
             for word in WAKE_WORDS:
                 clean_prompt = clean_prompt.replace(word, "")
             
-            # --- EL FILTRO SALVA-CRÉDITOS ---
-            # 1. Borramos cualquier carácter que no sea letra o número (como puntos o comas)
             clean_prompt = re.sub(r'[^\w\s]', '', clean_prompt).strip()
-
-            user_display = clean_prompt if clean_prompt else "[Solo nombre/ruido]"
+            user_display = clean_prompt if clean_prompt else "[Solo despertar]"
             print(f"\nXilef: {user_display}")
 
-            # 2. Si la frase sobrante es muy corta (vacía o solo un gemido de 1 letra)
-            # Entendemos que solo querías despertar a BMO. ¡No llamamos a la API!
             if len(clean_prompt) < 2:
                 face.set_state("hablando")
                 speak(random.choice(ACTIVATION_PHRASES))
             else:
                 face.set_state("pensando")
-                print("BMO: ¡Entendido!") 
+                print("BMO está procesando internamente...") 
                 
-                answer = ask_gemini(clean_prompt)
+                # Respuesta del modelo local sin restricciones de la nube
+                answer = bmo_brain.ask(clean_prompt)
                 
+                print(f"BMO: {answer}")
                 face.set_state("hablando")
                 speak(answer)
             
             listener.reset()
             face.set_state("esperando")
-            print("\n>>> BMO listo de nuevo...")
+            print("\n>>> BMO listo y atento...")
 
 def main():
     face = BMOFace()
@@ -98,4 +68,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\nBMO se va a dormir. ¡Adiós!")
+        print("\n[!] BMO está cerrando sus procesos. ¡Hasta luego, Xilef!")

@@ -143,7 +143,6 @@ class BMOFace:
 
     def handle_touch(self, x, y):
         """Define qué hace BMO según dónde lo toques"""
-        print(f"BMO tocado en: {x}, {y}")
         
         # Ejemplo: Si tocas la parte de arriba (frente/ojos)
         if y < 150:

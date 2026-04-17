@@ -25,7 +25,6 @@ class BMOListener:
                     text = self.recognizer.recognize_google(audio, language="es-MX")
                     
                     if text:
-                        print(f"\nXilef: {text}")
                         yield text.lower()
                         
                 except sr.UnknownValueError:

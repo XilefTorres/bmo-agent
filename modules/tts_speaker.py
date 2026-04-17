@@ -24,8 +24,6 @@ def speak(text):
     if not text or voice is None:
         return
 
-    print(f"\nBMO: {text}")
-
     try:
         # 1. Configuración de frecuencia (Aceleramos un 30% para tono agudo)
         BMO_SAMPLE_RATE = voice.config.sample_rate
