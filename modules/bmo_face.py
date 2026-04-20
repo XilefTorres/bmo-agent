@@ -6,11 +6,6 @@ import threading
 
 class BMOFace:
     def __init__(self):
-        try:
-            pygame.mixer.pre_init(44100, -16, 2, 4096)
-        except Exception as e:
-            print(f"Advertencia: No se pudo pre-inicializar el mixer: {e}")
-
         pygame.init()
         self.screen = pygame.display.set_mode((480, 320))
         pygame.display.set_caption("BMO")
@@ -118,7 +113,7 @@ class BMOFace:
                 self.overlay_callback(self.screen)
 
             pygame.display.flip()
-            clock.tick(30) # 30 FPS es ideal para Fedora/Raspberry
+            clock.tick(15) # 30 FPS es ideal para Fedora/Raspberry
             
         pygame.quit()
 
