@@ -16,6 +16,7 @@ bmo_brain = LocalBMO()
 
 def bmo_brain_loop(face):
     actions = BMOActions(face, bmo_brain)
+    face.key_callback = actions.handle_key
     listener = BMOListener()
     print("\n>>> BMO ONLINE. Di 'BMO' para despertar mis circuitos...")
 
@@ -26,6 +27,7 @@ def bmo_brain_loop(face):
             if actions.modo_juego_activo:
                 face.set_state("hablando")
                 speak("¡Sigo aquí! Pero estoy concentrado en tus juegos ahora mismo.")
+                face.set_state("esperando")
                 continue
             
             face.set_state("esperando")
@@ -40,6 +42,7 @@ def bmo_brain_loop(face):
             if len(clean_prompt) < 2:
                 face.set_state("hablando")
                 speak(random.choice(actions.activation_phrases))
+                face.set_state("esperando")
             
             # Intentamos despachar a través del nuevo sistema de acciones
             elif actions.dispatch(clean_prompt):
@@ -54,9 +57,9 @@ def bmo_brain_loop(face):
                 print(f"BMO: {answer}")
                 face.set_state("hablando")
                 speak(answer)
+                face.set_state("esperando")
             
             listener.reset()
-            face.set_state("esperando")
             print("\n>>> BMO listo y atento...")
 
 def main():

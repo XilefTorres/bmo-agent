@@ -13,3 +13,6 @@ class BaseCommand:
 
     def execute(self, text, actions_manager):
         raise NotImplementedError
+
+    def handle_key(self, key):
+        pass

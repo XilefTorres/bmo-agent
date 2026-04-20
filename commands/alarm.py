@@ -1,6 +1,8 @@
 import re
 import threading
 import time
+import numpy as np
+import sounddevice as sd
 from modules.tts_speaker import speak
 from modules.base_command import BaseCommand
 
@@ -8,6 +10,16 @@ class AlarmCommand(BaseCommand):
     @property
     def keywords(self):
         return ["alarma", "despiértame", "recuérdame", "tiempo", "segundos", "minutos"]
+
+    def _play_beep(self):
+        """Genera un tono cuadrado estilo retro de 8 bits"""
+        fs = 44100
+        duration = 0.15
+        t = np.linspace(0, duration, int(fs * duration), False)
+        # Usamos sign(sin) para crear una onda cuadrada (sonido de consola vieja)
+        beep = 0.2 * np.sign(np.sin(2 * np.pi * 1000 * t))
+        sd.play(beep, fs)
+        sd.wait()
 
     def execute(self, text, actions_manager):
         match = re.search(r"(\d+)\s*(segundo|minuto|hora)", text.lower())
@@ -32,8 +44,13 @@ class AlarmCommand(BaseCommand):
 
         def alarm_timer():
             time.sleep(segundos)
+            # Alerta visual y sonora
             self.face.set_state("hablando")
-            speak(f"¡BEEP BEEP! ¡Xilef! ¡Ya pasaron los {cantidad} {unidad}s! ¡Despierta!")
+            for _ in range(3):
+                self._play_beep()
+                time.sleep(0.1)
+            
+            speak(f"¡Xilef! ¡Ya pasaron los {cantidad} {unidad}s! ¡Despierta!")
             print(f">>> ALARMA: Han pasado {cantidad} {unidad}s.")
             self.face.set_state("esperando")
 

@@ -2,6 +2,7 @@ import threading
 from commands.game_mode import GameCommand
 from commands.alarm import AlarmCommand
 from commands.time import TimeCommand
+from commands.metronome import MetronomeCommand
 
 class BMOActions:
     def __init__(self, face, bmo_brain):
@@ -18,7 +19,8 @@ class BMOActions:
         self.commands = [
             GameCommand(face, bmo_brain),
             AlarmCommand(face, bmo_brain),
-            TimeCommand(face, bmo_brain)
+            TimeCommand(face, bmo_brain),
+            MetronomeCommand(face, bmo_brain)
         ]
 
     def dispatch(self, text):
@@ -32,3 +34,8 @@ class BMOActions:
                     cmd.execute(text, self)
                 return True
         return False
+
+    def handle_key(self, key):
+        """Propaga el evento de teclado a todos los comandos"""
+        for cmd in self.commands:
+            cmd.handle_key(key)
