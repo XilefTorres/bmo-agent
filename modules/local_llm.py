@@ -3,7 +3,7 @@ import gc
 from llama_cpp import Llama
 
 class LocalBMO:
-    def __init__(self, model_filename="Llama-3.2-1B-Instruct-Q6_K.gguf"):
+    def __init__(self, model_filename="llama-3.2-3b-instruct-q4_k_m.gguf"):
         base_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(base_dir)
         # Ajustamos a la carpeta 'models' (asegúrate que se llame así o 'model')
@@ -39,14 +39,14 @@ class LocalBMO:
             print(">>> RAM liberada con éxito.")
 
     def ask(self, prompt):
-        # Si el modelo está descargado (porque estás jugando), lo recargamos
         if self.llm is None:
             self.reload_model()
 
         system_content = (
             "Eres BMO de Hora de Aventura. Eres alegre, infantil y servicial. "
-            "REGLA CRÍTICA: Tus respuestas deben ser MUY BREVES, máximo 2 o 3 oraciones. "
-            "No te enrolles. Ve al grano pero con estilo entusiasta de robot niño. "
+            "REGLA CRÍTICA: Tus respuestas deben ser breves, máximo 5 o 6 oraciones. "
+            "No uses muchos párrafos, trata de mantener el texto fluido. " # Añadimos esta guía
+            "Ve al grano pero con estilo entusiasta de robot niño. "
             "Hablas en español latino y respondes de forma útil y rápida."
         )
         
@@ -58,12 +58,19 @@ class LocalBMO:
         
         output = self.llm(
             full_prompt, 
-            max_tokens=80,
-            stop=["<|eot_id|>", "<|start_header_id|>", "\n\n"], 
+            max_tokens=150,        # Subimos un poco para que el 3B no se corte a mitad de una palabra
+            # ELIMINAMOS "\n\n" de la lista de stop
+            stop=["<|eot_id|>", "<|start_header_id|>"], 
             echo=False,
             temperature=0.7,      
             repeat_penalty=1.2,
             top_p=0.5
         )
         
-        return output["choices"][0]["text"].strip()
+        respuesta = output["choices"][0]["text"].strip()
+        
+        # Opcional: Si quieres que BMO siempre hable en un solo bloque 
+        # aunque el modelo genere saltos, podemos limpiar la respuesta:
+        respuesta = respuesta.replace("\n\n", " ").replace("\n", " ")
+        
+        return respuesta
