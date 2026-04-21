@@ -3,6 +3,7 @@ from commands.game_mode import GameCommand
 from commands.alarm import AlarmCommand
 from commands.time import TimeCommand
 from commands.metronome import MetronomeCommand
+from commands.system_status import SystemStatusCommand
 
 class BMOActions:
     def __init__(self, face, bmo_brain):
@@ -20,7 +21,8 @@ class BMOActions:
             GameCommand(face, bmo_brain),
             AlarmCommand(face, bmo_brain),
             TimeCommand(face, bmo_brain),
-            MetronomeCommand(face, bmo_brain)
+            MetronomeCommand(face, bmo_brain),
+            SystemStatusCommand(face, bmo_brain)
         ]
 
     def dispatch(self, text):
