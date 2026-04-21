@@ -6,5 +6,6 @@ numpy
 sounddevice
 piper-tts
 pedalboard
+requests
 pyaudio
 llama-cpp-python
