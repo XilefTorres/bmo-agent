@@ -48,7 +48,7 @@ def bmo_brain_loop(face):
                 continue # Ignorar si no escucha la palabra de activación
 
         # 2. Lógica de Desactivación: Regresar al estado de espera
-        if any(stop_word in input_text for stop_word in ["adiós", "descansa", "duérmete", "silencio"]):
+        if any(stop_word in input_text for stop_word in ["adiós", "descansa", "duérmete", "silencio", "apagate"]):
             is_active = False
             face.set_state("hablando")
             speak("¡De acuerdo! Me iré a descansar un poco. ¡Llámame cuando quieras hablar!")
