@@ -9,6 +9,16 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_PATH = os.path.join(BASE_DIR, "piper", "es_MX-claude-high.onnx")
 
 voice = None
+_is_speaking = False
+_speaking_count = 0
+
+def is_speaking():
+    """Indica si BMO está reproduciendo audio en este momento."""
+    return _is_speaking
+
+def get_speaking_count():
+    """Devuelve un contador que aumenta cada vez que BMO empieza a hablar."""
+    return _speaking_count
 
 def load_voice():
     """Carga el modelo de Piper solo si no ha sido cargado antes."""
@@ -20,11 +30,14 @@ def load_voice():
             print(f"ERROR: No se encontró el modelo en: {MODEL_PATH}")
 
 def speak(text):
+    global _is_speaking, _speaking_count
     load_voice()
     if not text or voice is None:
         return
 
     try:
+        _is_speaking = True
+        _speaking_count += 1
         # 1. Configuración de frecuencia (Aceleramos un 30% para tono agudo)
         BMO_SAMPLE_RATE = voice.config.sample_rate
         
@@ -71,3 +84,5 @@ def speak(text):
         
     except Exception as e:
         print(f"Error en la salida de audio de BMO: {e}")
+    finally:
+        _is_speaking = False
