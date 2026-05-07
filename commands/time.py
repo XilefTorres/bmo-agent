@@ -5,7 +5,7 @@ from modules.base_command import BaseCommand
 class TimeCommand(BaseCommand):
     @property
     def keywords(self):
-        return ["hora", "qué hora es", "momento"]
+        return ["hora", "qué hora es"]
 
     def execute(self, text, actions_manager):
         ahora = datetime.now().strftime("%I:%M %p")

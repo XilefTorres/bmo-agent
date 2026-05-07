@@ -1,0 +1,59 @@
+import wikipediaapi
+import re
+from modules.tts_speaker import speak
+from modules.base_command import BaseCommand
+
+class WikipediaCommand(BaseCommand):
+    def __init__(self, face, bmo_brain):
+        super().__init__(face, bmo_brain)
+        # Importante: Wikipedia pide un User-Agent descriptivo
+        self.wiki = wikipediaapi.Wikipedia(
+            user_agent="BMO_Agent_Xilef (contact@example.com)",
+            language='es'
+        )
+
+    @property
+    def keywords(self):
+        return ["busca en wikipedia", "investiga sobre", "cuéntame de"]
+
+    @property
+    def threaded(self):
+        return True # Recomendado para peticiones de red en la Raspberry Pi
+
+    def execute(self, text, actions_manager):
+        self.face.set_state("pensando")
+        
+        # Extraemos lo que queremos buscar
+        query = self._extract_query(text.lower())
+        print(f">>> BMO consultando archivos de Wikipedia: {query}")
+
+        page = self.wiki.page(query)
+
+        if page.exists():
+            # Obtenemos un resumen manejable (primeros 2 o 3 párrafos)
+            wiki_context = page.summary[:700]
+            
+            # Le pedimos al cerebro de BMO que procese la info con su personalidad
+            prompt = (
+                f"Contexto de Wikipedia: {wiki_context}\n\n"
+                f"Pregunta del usuario: {text}\n"
+                "Instrucción: Responde de forma breve, útil y con la personalidad de BMO."
+            )
+            respuesta = self.bmo_brain.ask(prompt)
+        else:
+            respuesta = f"¡Oh, rayos! Mis sensores no encontraron nada sobre {query} en Wikipedia."
+
+        print(f"BMO (Wiki): {respuesta}")
+        self.face.set_state("hablando")
+        speak(respuesta)
+        self.face.set_state("esperando")
+
+    def _extract_query(self, text):
+        """Limpia las keywords para obtener el término de búsqueda puro"""
+        clean_text = text
+        for word in self.keywords:
+            clean_text = clean_text.replace(word, "")
+        
+        # Limpieza extra de símbolos y espacios
+        clean_text = re.sub(r'[^\w\s]', '', clean_text).strip()
+        return clean_text

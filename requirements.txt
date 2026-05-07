@@ -7,5 +7,6 @@ sounddevice
 piper-tts
 pedalboard
 requests
+wikipedia-api
 pyaudio
 llama-cpp-python

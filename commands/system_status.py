@@ -8,7 +8,7 @@ class SystemStatusCommand(BaseCommand):
     @property
     def keywords(self):
         # Palabras clave para preguntar sobre el estado del sistema
-        return ["sistema", "estado", "recursos", "temperatura", "ip", "servidor", "conexión"]
+        return ["recursos", "temperatura", "ip", "servidor", "conexión"]
 
     def _get_ip(self):
         """Obtiene la dirección IP local de la Raspberry Pi"""
