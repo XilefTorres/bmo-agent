@@ -2,11 +2,14 @@ import os
 import random
 import threading
 import re
+import time
+import schedule
 from modules.stt_listener import BMOListener
 from modules.tts_speaker import speak
 from modules.bmo_face import BMOFace
 from modules.local_llm import LocalBMO 
 from modules.actions import BMOActions
+from commands.wiki_search import WikipediaCommand
 
 WAKE_WORDS = ["beemo", "vimos", "vmos", "primo", "vivo"]
 
@@ -14,9 +17,34 @@ print(">>> Iniciando sistemas de BMO...")
 print(">>> Cargando redes neuronales locales... (Llama 3.2 1B)")
 bmo_brain = LocalBMO() 
 
+def start_daily_fact(wiki_cmd):
+    def run_scheduler():
+        # Mañana
+        schedule.every().day.at("12:00").do(wiki_cmd.learn_something_new)
+        
+        # Noche
+        schedule.every().day.at("22:30").do(wiki_cmd.learn_something_new)
+        
+        print(">>> [HORARIOS] Rutinas de aprendizaje programadas: 09:00 y 22:30")
+        
+        while True:
+            schedule.run_pending()
+            time.sleep(60) # Revisa cada minuto para no saturar el CPU
+
+    # Ejecutar en un hilo separado para no trabar el loop principal
+    threading.Thread(target=run_scheduler, daemon=True).start()
+
 def bmo_brain_loop(face):
     actions = BMOActions(face, bmo_brain)
     face.key_callback = actions.handle_key
+
+    # Buscamos el comando de wikipedia en la lista de acciones
+    wiki_cmd = next((c for c in actions.commands if isinstance(c, WikipediaCommand)), None)
+    
+    if wiki_cmd:
+        print(">>> Iniciando rutina de aprendizaje diario de BMO...")
+        start_daily_fact(wiki_cmd)
+
     listener = BMOListener()
     is_active = False # BMO empieza en espera
     print("\n>>> BMO ONLINE. Di 'BMO' para despertar mis circuitos...")

@@ -1,5 +1,6 @@
 import wikipediaapi
 import re
+import random
 from modules.tts_speaker import speak
 from modules.base_command import BaseCommand
 
@@ -57,3 +58,26 @@ class WikipediaCommand(BaseCommand):
         # Limpieza extra de símbolos y espacios
         clean_text = re.sub(r'[^\w\s]', '', clean_text).strip()
         return clean_text
+
+    def learn_something_new(self):
+        """BMO busca algo basado en tus gustos y te lo cuenta"""
+        mis_gustos = ["Programación", "Videojuegos", "Electrónica", "Sinaloa", "Historia", "Arte", "Dinosaurios", "Manga"]
+        tema_elegido = random.choice(mis_gustos)
+        
+        # Usamos la búsqueda de Wikipedia para obtener una página relacionada
+        # Tip: 'search' de la API de wikipedia puede darte títulos exactos
+        self.face.set_state("pensando")
+        page = self.wiki.page(tema_elegido)
+        
+        if page.exists():
+            context = page.summary[:800]
+            prompt = (
+                f"Es tiempo de un nuevo dato curioso. Encontré información sobre {tema_elegido} en mis archivos.\n"
+                f"Info: {context}\n"
+                "Instrucción: Despierta a Xilef con entusiasmo y cuéntale este dato curioso con tu personalidad de BMO."
+            )
+            respuesta = self.bmo_brain.ask(prompt)
+            
+            self.face.set_state("hablando")
+            speak(respuesta)
+            self.face.set_state("esperando")
