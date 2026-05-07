@@ -8,7 +8,7 @@ class WikipediaCommand(BaseCommand):
         super().__init__(face, bmo_brain)
         # Importante: Wikipedia pide un User-Agent descriptivo
         self.wiki = wikipediaapi.Wikipedia(
-            user_agent="BMO_Agent_Xilef (contact@example.com)",
+            user_agent="BMO_Agent_Xilef/0.8 (xilefjacobotorres@gmail.com)",
             language='es'
         )
 
