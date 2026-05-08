@@ -6,6 +6,7 @@ from commands.metronome import MetronomeCommand
 from commands.system_status import SystemStatusCommand
 from commands.nba_info import NBAInfoCommand
 from commands.wiki_search import WikipediaCommand
+from commands.price_search import PriceSearchCommand
 
 class BMOActions:
     def __init__(self, face, bmo_brain):
@@ -26,7 +27,8 @@ class BMOActions:
             MetronomeCommand(face, bmo_brain),
             SystemStatusCommand(face, bmo_brain),
             NBAInfoCommand(face, bmo_brain),
-            WikipediaCommand(face, bmo_brain)
+            WikipediaCommand(face, bmo_brain),
+            PriceSearchCommand(face, bmo_brain)
         ]
 
     def dispatch(self, text):

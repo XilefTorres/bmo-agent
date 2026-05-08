@@ -6,6 +6,7 @@ numpy
 sounddevice
 piper-tts
 pedalboard
+BeautifulSoup4
 requests
 schedule
 wikipedia-api
