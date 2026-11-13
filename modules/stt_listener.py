@@ -28,31 +28,36 @@ class BMOListener:
             # Registramos el estado del contador antes de abrir el micrófono
             start_count = get_speaking_count()
 
-            with self.microphone as source:
-                try:
+            text = None
+            try:
+                # El micrófono solo queda abierto mientras se graba la frase
+                with self.microphone as source:
                     print("\n[Escuchando...]")
                     # Escuchamos con un timeout para re-evaluar si BMO empezó a hablar periódicamente
                     audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=10)
-                    
-                    # Si BMO empezó a hablar o terminó de hablar mientras el micrófono estaba abierto, descartamos el audio
-                    if get_speaking_count() != start_count or is_speaking():
-                        continue
-                    
-                    # Convertimos audio a texto (Motor de Google gratuito)
-                    text = self.recognizer.recognize_google(audio, language="es-MX")
-                    
-                    if text:
-                        print(f">>> BMO captó: \"{text}\"")
-                        yield text.lower()
-                        
-                except sr.WaitTimeoutError:
-                    continue # Reintenta el ciclo si no hubo sonido detectado
-                except sr.RequestError:
-                    print("\n[!] Error de conexión con el servicio de voz.")
+
+                # Si BMO empezó a hablar o terminó de hablar mientras el micrófono estaba abierto, descartamos el audio
+                if get_speaking_count() != start_count or is_speaking():
                     continue
-                except Exception as e:
-                    print(f"\n[!] Error inesperado: {e}")
-                    continue
+
+                # Convertimos audio a texto (Motor de Google gratuito)
+                text = self.recognizer.recognize_google(audio, language="es-MX")
+            except sr.WaitTimeoutError:
+                continue # Reintenta el ciclo si no hubo sonido detectado
+            except sr.UnknownValueError:
+                continue # Hubo sonido pero no se entendió ninguna palabra
+            except sr.RequestError:
+                print("\n[!] Error de conexión con el servicio de voz.")
+                time.sleep(2)
+                continue
+            except Exception as e:
+                print(f"\n[!] Error inesperado: {e}")
+                continue
+
+            # El yield va fuera del 'with': el micrófono ya está cerrado mientras BMO procesa
+            if text:
+                print(f">>> BMO captó: \"{text}\"")
+                yield text.lower()
 
     def reset(self):
         """Con esta tecnología no es necesario resetear manualmente los buffers."""
