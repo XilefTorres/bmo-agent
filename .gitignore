@@ -19,3 +19,6 @@ piper/*.json
 
 # Librerías de sistema o compilados
 *.so
+# Estado local de BMO
+alarms.json
+bmo_settings.json
