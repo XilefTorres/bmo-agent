@@ -3,6 +3,8 @@ import sounddevice as sd
 from piper.voice import PiperVoice
 from pedalboard import Chorus, Clipping, Distortion, LadderFilter, LowpassFilter, Pedalboard, Bitcrush, HighpassFilter, Gain, PitchShift, Resample
 import os
+import threading
+import time
 
 # Rutas relativas para portabilidad total
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -78,11 +80,70 @@ def speak(text):
         # 4. Normalización para evitar que truene feo en Fedora
         if np.max(np.abs(effected_audio)) > 1.0:
             effected_audio = effected_audio / np.max(np.abs(effected_audio))
-        # 5. Reproducción
-        sd.play(effected_audio, samplerate=BMO_SAMPLE_RATE)
-        sd.wait() 
-        
+        # 5. Reproducción (con la boca de BMO sincronizada al volumen del audio)
+        levels = _mouth_levels(effected_audio, BMO_SAMPLE_RATE)
+        with _speak_lock:
+            sd.play(effected_audio, samplerate=BMO_SAMPLE_RATE)
+            _drive_mouth(levels)
+            sd.wait()
+
     except Exception as e:
         print(f"Error en la salida de audio de BMO: {e}")
     finally:
+<<<<<<< Updated upstream
         _is_speaking = False
+=======
+        _notify_mouth(None)
+
+
+# ---------- Sincronización de la boca ----------
+ENV_HOP = 0.04  # segundos por muestra de la envolvente (25 por segundo)
+_speak_lock = threading.Lock()  # evita que dos frases suenen encima una de otra
+_mouth_callback = None
+
+
+def set_mouth_callback(callback):
+    """La cara registra aquí su función: callback(nivel 0-3) mientras suena, callback(None) al terminar."""
+    global _mouth_callback
+    _mouth_callback = callback
+
+
+def _notify_mouth(level):
+    if _mouth_callback is not None:
+        try:
+            _mouth_callback(level)
+        except Exception as e:
+            print(f"Error actualizando la boca de BMO: {e}")
+
+
+def _mouth_levels(audio, sample_rate):
+    """Convierte el audio en una lista de niveles de apertura (0 cerrada ... 3 muy abierta)."""
+    audio = np.asarray(audio).reshape(-1)
+    hop = int(sample_rate * ENV_HOP)
+    n = len(audio) // hop
+    if n == 0:
+        return []
+    rms = np.sqrt((audio[: n * hop].reshape(n, hop) ** 2).mean(axis=1))
+    loud = rms[rms > 0.1 * rms.max()]
+    if loud.size == 0:
+        return [0] * n
+    ratio = rms / np.percentile(loud, 90)
+    return np.digitize(ratio, [0.15, 0.45, 0.8]).tolist()
+
+
+def _drive_mouth(levels):
+    """Mientras suena el audio, avisa a la cara del nivel que toca en cada instante."""
+    if not levels or _mouth_callback is None:
+        return
+    try:
+        latency = float(sd.get_stream().latency)
+    except Exception:
+        latency = 0.0
+    start = time.perf_counter()
+    while True:
+        i = int((time.perf_counter() - start - latency) / ENV_HOP)
+        if i >= len(levels):
+            break
+        _notify_mouth(levels[max(i, 0)])
+        time.sleep(0.01)
+>>>>>>> Stashed changes

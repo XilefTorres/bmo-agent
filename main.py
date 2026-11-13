@@ -31,8 +31,50 @@ def start_daily_fact(wiki_cmd):
             schedule.run_pending()
             time.sleep(60) # Revisa cada minuto para no saturar el CPU
 
+<<<<<<< Updated upstream
     # Ejecutar en un hilo separado para no trabar el loop principal
     threading.Thread(target=run_scheduler, daemon=True).start()
+=======
+def abrir_modo_juego(face):
+    """Función para gestionar la transición al modo emulador"""
+    global MODO_JUEGO_ACTIVO
+    frase_juego = "¡Iniciando mi interfaz de juegos!"
+    print(f"BMO: {frase_juego}")
+    
+    face.set_state("hablando")
+    speak(frase_juego)
+    
+    # Activamos el seguro para no usar el LLM
+    MODO_JUEGO_ACTIVO = True
+    
+    # Intentar liberar memoria si el objeto bmo_brain tiene esa función
+    if hasattr(bmo_brain, 'unload_model'):
+        bmo_brain.unload_model()
+
+    face.set_state("jugando")
+
+    try:
+        # Nota: Aquí el hilo se detiene hasta que Pegasus se cierra
+        subprocess.run(["pegasus"], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"[!] Error al ejecutar Pegasus: {e}")
+        speak("¡Oh no, Xilef! Algo salió mal al intentar abrir mis juegos.")
+    except FileNotFoundError:
+        print(">>> Comando 'pegasus' no encontrado, intentando ruta directa...")
+        subprocess.run(["/home/xileftorres/PegasusApp/pegasus-fe"])
+    
+    # Al cerrar Pegasus, desactivamos el seguro
+    MODO_JUEGO_ACTIVO = False
+
+    if hasattr(bmo_brain, 'reload_model'):
+        bmo_brain.reload_model()
+    
+    vuelta_frase = "¡Bienvenido de vuelta! ¿Te divertiste jugando?"
+    print(f"BMO: {vuelta_frase}")
+    face.set_state("hablando")
+    speak(vuelta_frase)
+    face.set_state("esperando")
+>>>>>>> Stashed changes
 
 def bmo_brain_loop(face):
     actions = BMOActions(face, bmo_brain)
@@ -52,6 +94,7 @@ def bmo_brain_loop(face):
     for text in listener.listen():
         input_text = text.lower() 
         
+<<<<<<< Updated upstream
         # 1. Lógica de Activación: Despertar a BMO
         if not is_active:
             if any(word in input_text for word in WAKE_WORDS):
@@ -72,6 +115,38 @@ def bmo_brain_loop(face):
                 else:
                     # Si ya traía una orden, la procesamos directamente
                     input_text = clean_prompt
+=======
+        if any(word in input_text for word in WAKE_WORDS):
+            minimizar_todo_excepto_bmo()
+            # Si estamos jugando, BMO solo da una respuesta corta sin usar el LLM
+            if MODO_JUEGO_ACTIVO:
+                # Sin cambiar el estado: la cara de juego vuelve sola cuando termine de hablar
+                speak("¡Sigo aquí! Pero estoy concentrado en tus juegos ahora mismo.")
+                continue
+
+            face.set_state("escuchando")
+            
+            clean_prompt = input_text
+            for word in WAKE_WORDS:
+                clean_prompt = clean_prompt.replace(word, "")
+            
+            clean_prompt = re.sub(r'[^\w\s]', '', clean_prompt).strip()
+            user_display = clean_prompt if clean_prompt else "[Solo despertar]"
+            print(f"\nXilef: {user_display}")
+
+            palabras_juego = ["juguemos", "jugar", "videojuegos", "emulador"]
+            
+            if len(clean_prompt) < 2:
+                face.set_state("hablando")
+                speak(random.choice(ACTIVATION_PHRASES))
+            
+            elif any(p in clean_prompt for p in palabras_juego):
+                # Lanzar el modo juego en un hilo separado para no bloquear el listener
+                game_thread = threading.Thread(target=abrir_modo_juego, args=(face,))
+                game_thread.start()
+                continue  # el hilo del juego maneja la cara; no la pisamos con "esperando"
+            
+>>>>>>> Stashed changes
             else:
                 continue # Ignorar si no escucha la palabra de activación
 
