@@ -8,6 +8,7 @@ class SystemStatusCommand(BaseCommand):
     @property
     def keywords(self):
         # Palabras clave para preguntar sobre el estado del sistema
+        # Se buscan como palabra completa: "ip" ya no coincide con "tipo" o "equipo"
         return ["recursos", "temperatura", "ip", "servidor", "conexión"]
 
     def _get_ip(self):
@@ -22,8 +23,7 @@ class SystemStatusCommand(BaseCommand):
             return "no disponible"
 
     def execute(self, text, actions_manager):
-        self.face.set_state("hablando")
-        
+
         # 1. Obtener Temperatura
         temp_val = None
         # Intento A: Raspberry Pi
@@ -53,8 +53,6 @@ class SystemStatusCommand(BaseCommand):
                     f"Mi dirección I P es {ip_speech}. "
                     "¡Abriré el monitor de recursos para que revises mis procesos!")
         speak(respuesta)
-        
-        self.face.set_state("esperando")
 
         # Verificamos si htop existe, si no usamos top
         monitor_cmd = "btop" if shutil.which("btop") else "top"
